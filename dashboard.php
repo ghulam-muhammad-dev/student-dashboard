@@ -141,7 +141,7 @@ require_once __DIR__ . "/config.php";
                         </p>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="student-create.html" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                        <a href="./student-create.php" class="btn btn-primary d-inline-flex align-items-center gap-2">
                             <i class="bi bi-plus-lg"></i>
                             <span>Add New Student</span>
                         </a>
