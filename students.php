@@ -5,27 +5,46 @@ require_once __DIR__ . "/db.php";
 
 //get value from get method
 $search = isset($_GET['search']) ? $_GET['search'] : '';
-$class = isset($_GET['class'] ) ? $_GET['class'] : '';
+$class = isset($_GET['class']) ? $_GET['class'] : '';
 $status = isset($_GET['status']) ? $_GET['status'] : '';
 
 
 
 
-$q="SELECT * from students 
+$q = "SELECT * from students 
 inner join academic
 on students.student_id = academic.student_id
 ";
 
-//search input value
-if($search != ''){
-    $q.="WHERE students.first_name ='$search' OR students.last_name ='$search' OR students.email ='$search' OR students.roll_number ='$search'";
+// Maintain a dynamic list of filters
+$conditions = [];
+
+// search
+if ($search != '') {
+    $conditions[] = "(students.first_name = '$search' OR students.last_name = '$search' OR students.email = '$search' OR academic.roll_number = '$search')";
+}
+
+// sort by class
+if ($class != '') {
+    $conditions[] = "academic.class = '$class'";
+}
+
+// sort by status
+if ($status != '') {
+    // Specify the correct table to completely prevent column ambiguity
+    $conditions[] = "academic.status = '$status'";
+}
+
+// Append conditions correctly under a valid WHERE clause
+if (count($conditions) > 0) {
+    $q .= " WHERE " . implode(' AND ', $conditions);
 }
 //execute
-$result= mysqli_query($conn, $q);
+$result = mysqli_query($conn, $q);
 
 
 //extract sata from result
-$data = mysqli_fetch_all($result , MYSQLI_ASSOC);
+$data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 
 ?>
@@ -35,6 +54,7 @@ $data = mysqli_fetch_all($result , MYSQLI_ASSOC);
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -50,6 +70,7 @@ $data = mysqli_fetch_all($result , MYSQLI_ASSOC);
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
 
     <div class="app-container">
@@ -86,7 +107,9 @@ $data = mysqli_fetch_all($result , MYSQLI_ASSOC);
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="userMenu">
                             <li><a class="dropdown-item py-2" href="#"><i class="bi bi-person me-2"></i>My Profile</a></li>
                             <li><a class="dropdown-item py-2" href="#"><i class="bi bi-sliders me-2"></i>Preferences</a></li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item py-2 text-danger" href="login.html"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                         </ul>
                     </div>
@@ -108,39 +131,41 @@ $data = mysqli_fetch_all($result , MYSQLI_ASSOC);
                 </div>
 
                 <!-- Filters & Search Toolbar -->
-                <div class="card-custom p-3 mb-4">
-                   <form >
-                     <div class="row g-3">
-                        <div class="col-12 col-md-5">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                                <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search by name, email or roll...">
+                <form action="" method="GET">
+                    <div class="card-custom p-3 mb-4">
+                        <form>
+                            <div class="row g-3">
+                                <div class="col-12 col-md-5">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search by name, email or roll...">
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <select class="form-select" name="class">
+                                        <option value="">All Classes</option>
+                                        <option value="10-A">Grade 10-A</option>
+                                        <option value="10-B">Grade 10-B</option>
+                                        <option value="11-A">Grade 11-A</option>
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <select class="form-select" name="status">
+                                        <option value="">All Statuses</option>
+                                        <option value="active">Active</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-2 d-grid">
+                                    <button type"submit" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-1">
+                                        <i class="bi bi-arrow-clockwise"></i> search
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <select class="form-select"  name="class">
-                                <option value="">All Classes</option>
-                                <option value="10-A">Grade 10-A</option>
-                                <option value="10-B">Grade 10-B</option>
-                                <option value="11-A">Grade 11-A</option>
-                            </select>
-                        </div>
-                        <div class="col-6 col-md-2">
-                            <select class="form-select"  name="status">
-                                <option value="">All Statuses</option>
-                                <option value="active">Active</option>
-                                <option value="pending">Pending</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                        <div class="col-12 col-md-2 d-grid">
-                            <button type"submit" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-1">
-                                <i class="bi bi-arrow-clockwise"></i> search
-                            </button>
-                        </div>
+                        </form>
                     </div>
-                   </form>
-                </div>
+                </form>
 
                 <!-- Students Table Card -->
                 <div class="card-custom overflow-hidden">
@@ -158,17 +183,17 @@ $data = mysqli_fetch_all($result , MYSQLI_ASSOC);
                                 </tr>
                             </thead>
                             <tbody>
-                                
-                            <?php if(mysqli_num_rows($result) ==0) {?>
-                             <tr>
-                                <td colspan="7">No students found</td>
-                            </tr>
-                            <?php }?>
+
+                                <?php if (mysqli_num_rows($result) == 0) { ?>
+                                    <tr>
+                                        <td colspan="7">No students found</td>
+                                    </tr>
+                                <?php } ?>
 
 
-                            <?php if(mysqli_num_rows($result) >0) {?>
-                             <?php foreach($data as $student) {?>
-                                       <tr>
+                                <?php if (mysqli_num_rows($result) > 0) { ?>
+                                    <?php foreach ($data as $student) { ?>
+                                        <tr>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop&crop=faces" class="avatar-sm rounded-circle" alt="Alex">
@@ -191,8 +216,8 @@ $data = mysqli_fetch_all($result , MYSQLI_ASSOC);
                                                 </div>
                                             </td>
                                         </tr>
-                            <?php } ?>            
-                            <?php }?>
+                                    <?php } ?>
+                                <?php } ?>
                             </tbody>
                         </table>
                     </div>
@@ -239,4 +264,5 @@ $data = mysqli_fetch_all($result , MYSQLI_ASSOC);
     <!-- Custom JS -->
     <script src="assets/js/main.js"></script>
 </body>
+
 </html>
